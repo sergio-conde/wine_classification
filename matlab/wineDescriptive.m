@@ -34,4 +34,19 @@ end
 
 %% ARE THE ATTRIBUTES STATISTICALLY INDEPENDENT?
 
+[attributPearson, pPearson] = corr(wine.data{:,:},'Type','Pearson');
+[attributSpearman, pSpearman] = corr(wine.data{:,:},'Type','Spearman');
+
+corrMatrix = triu(attributPearson,1) + tril(attributSpearman,-1);
+corrDiff = attributPearson - attributSpearman;
+
+%%
+wfig(2)
+subplot 121
+imagesc(corrMatrix)
+axis square; colorbar
+subplot 122
+imagesc(corrDiff)
+axis square; colorbar
+
 
