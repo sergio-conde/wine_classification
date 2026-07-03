@@ -1,6 +1,9 @@
 function wine = wineConfig
 
 wine.dataPath = 'C:\Work\GitHub\wine_classification\example_data';
+if ~exist(wine.dataPath,"dir")
+    wine.dataPath = 'M:\GitHub\wine_classification\example_data';
+end
 
 % Atributte's names intended to be used in the data table
 wine.attribute.fieldNames = {
