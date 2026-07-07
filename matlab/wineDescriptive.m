@@ -38,15 +38,26 @@ end
 [attributSpearman, pSpearman] = corr(wine.data{:,:},'Type','Spearman');
 
 corrMatrix = triu(attributPearson,1) + tril(attributSpearman,-1);
+corrMatrix(pPearson > 0.05 | pSpearman > 0.05) = nan;
+
 corrDiff = attributPearson - attributSpearman;
+corrDiff(pPearson > 0.05 | pSpearman > 0.05) = nan;
 
 %%
-wfig(2)
+sigColormap = [0.9 * ones(1,3); jet(254)];
+
+wfig(2);
+colormap(sigColormap)
+
 subplot 121
 imagesc(corrMatrix)
 axis square; colorbar
+box off; xlabel 'Attribute'; ylabel 'Attribute'
+
 subplot 122
 imagesc(corrDiff)
 axis square; colorbar
+box off; xlabel 'Attribute'; ylabel 'Attribute'
+
 
 
