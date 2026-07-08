@@ -40,7 +40,7 @@ end
 corrMatrix = triu(attributPearson,1) + tril(attributSpearman,-1);
 corrMatrix(pPearson > 0.05 | pSpearman > 0.05) = nan;
 
-corrDiff = attributPearson - attributSpearman;
+corrDiff = abs(attributPearson - attributSpearman);
 corrDiff(pPearson > 0.05 | pSpearman > 0.05) = nan;
 
 %%
