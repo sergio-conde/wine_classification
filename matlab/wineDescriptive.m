@@ -11,6 +11,7 @@ nAtributtes = width(wine.data);
 descriptParams = {'Mean','STD','Median','IQR','Minimum','Maximum'};
 descriptTable = array2table(nan(nAtributtes,length(descriptParams)),...
     "RowNames", wine.attribute.labels, "VariableNames", descriptParams);
+
 for iAttribute = 1:nAtributtes
     descriptTable{iAttribute,:} = [
         mean(wine.data{:,iAttribute}),...
@@ -38,26 +39,39 @@ end
 [attributSpearman, pSpearman] = corr(wine.data{:,:},'Type','Spearman');
 
 corrMatrix = triu(attributPearson,1) + tril(attributSpearman,-1);
-corrMatrix(pPearson > 0.05 | pSpearman > 0.05) = nan;
-
 corrDiff = abs(attributPearson - attributSpearman);
-corrDiff(pPearson > 0.05 | pSpearman > 0.05) = nan;
+
+pCorrected = 0.05 / nchoosek(nAtributtes,2);
+
+alphaData = ones(nAtributtes);
+alphaData(pPearson > pCorrected | pSpearman > pCorrected) = 0.1;
+alphaData(logical(eye(nAtributtes))) = 0;   
 
 %%
-sigColormap = [0.9 * ones(1,3); jet(254)];
-
-wfig(2);
-colormap(sigColormap)
+wfig(2); clf
 
 subplot 121
-imagesc(corrMatrix)
-axis square; colorbar
+h1 = imagesc(corrMatrix);
+h1.AlphaData = alphaData;
+h1.AlphaDataMapping = 'none';
+hold on
+plot([0.5 13.5],[0.5 13.5],'--k')
+hold off
+cb1 = colorbar; cb1.Label.String = 'Correlation';
+clim([-1 1])
+axis square; set(gca,'Color','w');
 box off; xlabel 'Attribute'; ylabel 'Attribute'
 
 subplot 122
-imagesc(corrDiff)
-axis square; colorbar
+h2 = imagesc(corrDiff);
+h2.AlphaData = alphaData;
+h2.AlphaDataMapping = 'none';
+hold on
+plot([0.5 13.5],[0.5 13.5],'--k')
+hold off
+cb2 = colorbar; cb2.Label.String = '\Delta Correlation';
+axis square; set(gca,'Color','w');
 box off; xlabel 'Attribute'; ylabel 'Attribute'
 
-
-
+% format figure function
+% white, ticks out
