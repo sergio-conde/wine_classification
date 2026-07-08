@@ -83,14 +83,21 @@ colormap(gca,"abyss");
 
 % format figure function
 % white, ticks out
-%%
+%% Hierarquical clustering 
 
 dissMatrix = 1 - abs(attributPearson);
 attClusters = linkage(squareform(dissMatrix),'average');
 
 wfig(3)
-hdend = dendrogram(attClusters,"Orientation","right");
+[hdend, ~, y_order] = dendrogram(attClusters,"Orientation","right");
 box off
-y_order = str2num(get(gca,'yticklabels'));
 set(gca,'yticklabels', wine.attribute.labels(y_order),'YDir','reverse')
 xlabel 'Distance';
+
+%% Parallell plot
+
+wfig(4)
+wineTable = wine.data;
+wineTable.cultivar = categorical(wine.id);
+parallelplot(wineTable, 'GroupVariable', 'cultivar', ...
+    'CoordinateVariables', wine.attribute.fieldNames);
