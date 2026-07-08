@@ -61,17 +61,36 @@ cb1 = colorbar; cb1.Label.String = 'Correlation';
 clim([-1 1])
 axis square; set(gca,'Color','w');
 box off; xlabel 'Attribute'; ylabel 'Attribute'
+colormap(gca,"parula");
+text(9, 5, 'Pearson', ...
+    'Rotation', - 45, 'HorizontalAlignment', 'center', ...
+    'BackgroundColor', [1 1 1 0.7], 'FontWeight', 'bold')
+
+text(5, 9, 'Spearman', ...
+    'Rotation', - 45, 'HorizontalAlignment', 'center', ...
+    'BackgroundColor', [1 1 1 0.7], 'FontWeight', 'bold')
 
 subplot 122
 h2 = imagesc(corrDiff);
 h2.AlphaData = alphaData;
-h2.AlphaDataMapping = 'none';
-hold on
-plot([0.5 13.5],[0.5 13.5],'--k')
-hold off
+h2.AlphaDataMapping = 'none'; hold on
+plot([0.5 13.5],[0.5 13.5],'--k'); hold off
 cb2 = colorbar; cb2.Label.String = '\Delta Correlation';
+clim([0 1])
 axis square; set(gca,'Color','w');
 box off; xlabel 'Attribute'; ylabel 'Attribute'
+colormap(gca,"abyss");
 
 % format figure function
 % white, ticks out
+%%
+
+dissMatrix = 1 - abs(attributPearson);
+attClusters = linkage(squareform(dissMatrix),'average');
+
+wfig(3)
+hdend = dendrogram(attClusters,"Orientation","right");
+box off
+y_order = str2num(get(gca,'yticklabels'));
+set(gca,'yticklabels', wine.attribute.labels(y_order),'YDir','reverse')
+xlabel 'Distance';
