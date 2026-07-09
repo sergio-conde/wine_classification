@@ -5,24 +5,67 @@
 clear; clc
 wine = wineConfig;
 
-%% DESCRIPTIVE STATISTICS
+%% LINEAR DISCRIMINANT ANALYSIS
 
-% Attribute's distribution
-wfig(1);
-for iAtt = 1:length(wine.attribute.labels)
-    subplot(4,4,iAtt)
-    histogram(wine.data{:,iAtt},15)
-    box off; 
-    xlabel(wine.attribute.labels{iAtt})
-    ylabel('Wine Count')
-end
+% This model uses the leave-one-out approach. It runs 178 models leaving
+% one sample out every time. LDA is not affected by the different scales
+% the attributes are showing, thus we don't do anything to the original
+% data.
 
-%% ARE THE ATTRIBUTES STATISTICALLY INDEPENDENT?
+wineModel = fitcdiscr(wine.data,categorical(wine.id), "DiscrimType","linear",...
+    'Prior','empirical', 'Leaveout','on'); 
 
+% Here he quantify the percentage of missclassifications (performance)
+looError = kfoldLoss(wineModel);
+looAccuracy = 1 - looError;
+fprintf('Leave-one-out accuracy: %.2f%%\n', looAccuracy*100);
+
+% 
+[predictedLabels, scores] = kfoldPredict(wineModel);
+trueLabels = categorical(wine.id);
+
+figure;
+confusionchart(trueLabels, predictedLabels);
+
+%%
+% This is the full model without any cross-validation.
+wineModelFull = fitcdiscr(wine.data, categorical(wine.id), ...
+    "DiscrimType","linear", "Prior","empirical");
+
+[~,~,stats] = manova1(wine.data{:,:}, wine.id);
+canonScores = stats.canon;   % proyección: columna 1 = LD1, columna 2 = LD2
+
+% this is important to compare to the LOO case. The full model tends to
+% overestimate the perfromance
+fullAccuracy = 1 - resubLoss(wineModelFull); 
+
+figure; % Maps each sample into the LDA space. 
+gscatter(canonScores(:,1), canonScores(:,2), wine.id);
+xlabel('LD1'); ylabel('LD2');
+
+%% CLASSIFYING NEW SAMPLES
+
+% In the case we have a new wine sample, it should be in the same order and
+% scale as the data used to train the model. Then we can classify the new
+% data and 
+
+newWine = [13.5, 1.8, 2.3, 15, 100, 2.5, 2.8, 0.3, 1.5, 5, 1.0, 3.0, 900];  % mismo orden y escala que wine.data
+newWineTab = array2table(newWine, "VariableNames", wine.attribute.fieldNames);
+[predictedLabel, score] = predict(wineModelFull, newWineTab);
+
+fprintf('Classification: Cultivar %i with %.2f%% probability\n', ...
+    predictedLabel, score(predictedLabel));
+
+% Map the new sample in the LDA space using the eigenvectors
+gmean = mean(wine.data{:,:}, 1);
+newCanon = (newWine - gmean) * stats.eigenvec;
+
+hold on
+plot(newCanon(1), newCanon(2), 'kp', 'MarkerSize', 15, 'MarkerFaceColor', 'y')
+hold off
 
 %% PRINCIPAL COMPONENT ANALYSIS
 pcaWine = zscore(wine{:,2:end},[],1);
-% pcaWine = wine{:,2:end};
 
 [coeff,score,latent,tsquared,explained] = pca(pcaWine);
 
