@@ -62,6 +62,7 @@ clim([-1 1])
 axis square; set(gca,'Color','w');
 box off; xlabel 'Attribute'; ylabel 'Attribute'
 colormap(gca,"parula");
+
 text(9, 5, 'Pearson', ...
     'Rotation', - 45, 'HorizontalAlignment', 'center', ...
     'BackgroundColor', [1 1 1 0.7], 'FontWeight', 'bold')
@@ -83,6 +84,7 @@ colormap(gca,"abyss");
 
 % format figure function
 % white, ticks out
+
 %% Hierarquical clustering 
 
 dissMatrix = 1 - abs(attributPearson);
