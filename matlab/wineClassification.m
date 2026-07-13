@@ -39,9 +39,39 @@ canonScores = stats.canon;   % proyección: columna 1 = LD1, columna 2 = LD2
 % overestimate the perfromance
 fullAccuracy = 1 - resubLoss(wineModelFull); 
 
-figure; % Maps each sample into the LDA space. 
+figure(2); % Maps each sample into the LDA space. 
+theme(gcf,"light")
+
 gscatter(canonScores(:,1), canonScores(:,2), wine.id);
 xlabel('LD1'); ylabel('LD2');
+
+%% RANKING COEFFICIENTS 
+
+attributeStd = std(wine.data{:,:});
+attributeRank = nan(4,13);
+
+classPairs = [1 2;1 3;2 3];
+classPairsLabels = {...
+    'Class1 vs Class2',...
+    'Class1 vs Class3',...
+    'Class2 vs Class3',...
+    'Mean weight'};
+for ipair = 1:3
+    compCoeffs = wineModelFull.Coeffs(classPairs(ipair,1),classPairs(ipair,2)).Linear;
+    attributeRank(ipair,:) = compCoeffs.*attributeStd(:);
+end
+attributeRank(4,:) = mean(attributeRank(1:3,:));
+
+figure(3); 
+theme(gcf,"light")
+imagesc(attributeRank)
+hbar = colorbar;
+hbar.Label.String = 'Weight';
+set(gca,'Box', 'off', 'TickDir', 'out',...
+    'ytick',1:4,...
+    'YTickLabel',classPairsLabels,...
+    'xtick',1:13,...
+    'XTickLabel',wine.attribute.labels)
 
 %% CLASSIFYING NEW SAMPLES
 
@@ -63,18 +93,19 @@ newCanon = (newWine - gmean) * stats.eigenvec;
 hold on
 plot(newCanon(1), newCanon(2), 'kp', 'MarkerSize', 15, 'MarkerFaceColor', 'y')
 hold off
+%%
 
 %% PRINCIPAL COMPONENT ANALYSIS
-pcaWine = zscore(wine{:,2:end},[],1);
+pcaWine = zscore(wine.data{:,2:end},[],1);
 
 [coeff,score,latent,tsquared,explained] = pca(pcaWine);
 
-wfig(3);
-
+wfig(4);
+theme(gcf,"light")
 subplot 121
-plot3(score(:,1),score(:,2),score(:,3),'.k','MarkerSize',5)
+plot(score(:,1),score(:,2),'.k','MarkerSize',5)
 grid on
-xlabel 'PCA1'; ylabel 'PCA2'; zlabel 'PCA3'
+xlabel 'PCA1'; ylabel 'PCA2'; 
 
 subplot 122
 explVariance = cumsum(explained);
