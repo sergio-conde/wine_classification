@@ -53,8 +53,9 @@ newWine = [13.5, 1.8, 2.3, 15, 100, 2.5, 2.8, 0.3, 1.5, 5, 1.0, 3.0, 900];  % mi
 newWineTab = array2table(newWine, "VariableNames", wine.attribute.fieldNames);
 [predictedLabel, score] = predict(wineModelFull, newWineTab);
 
+predictedNum = double(predictedLabel);
 fprintf('Classification: Cultivar %i with %.2f%% probability\n', ...
-    predictedLabel, score(predictedLabel));
+    predictedLabel, score(predictedNum) * 100);
 
 % Map the new sample in the LDA space using the eigenvectors
 gmean = mean(wine.data{:,:}, 1);
