@@ -90,7 +90,14 @@ colormap(gca,"abyss");
 dissMatrix = 1 - abs(attributPearson);
 attClusters = linkage(squareform(dissMatrix),'average');
 
-wfig(3)
+mergeHeights = attClusters(:,3);
+gaps = diff(mergeHeights);
+[~, idx] = max(gaps);
+threshold = mean(mergeHeights(idx:idx+1));   % punto medio entre el salto más grande
+
+attClusterLabels = cluster(attClusters, 'Cutoff', threshold, 'Criterion', 'distance');
+
+wfig(3);
 [hdend, ~, y_order] = dendrogram(attClusters,"Orientation","right");
 box off
 set(gca,'yticklabels', wine.attribute.labels(y_order),'YDir','reverse')
