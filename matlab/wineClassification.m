@@ -65,14 +65,24 @@ attributeRank(4,:) = mean(abs(attributeRank(1:3,:)));
 maxWeight = max(abs(attributeRank),[],'all');
 
 phenolicCluster = {'Flavanoids','Total phenols'};
+adjunctCluster ={'OD280/OD315', 'Proanthocyanins'};
 clusterAttribute = ismember(wine.attribute.labels,phenolicCluster);
+adjunctAttribute = ismember(wine.attribute.labels,adjunctCluster);
+singleAttribute = ~(clusterAttribute | adjunctAttribute);
+
 organizedRank = [attributeRank(:,clusterAttribute) ...
-    attributeRank(:,~clusterAttribute)];
+    attributeRank(:,adjunctAttribute) ...
+    attributeRank(:,singleAttribute)];
+
 organizedLabels = [wine.attribute.labels(clusterAttribute) ...
-    wine.attribute.labels(~clusterAttribute)];
+    wine.attribute.labels(adjunctAttribute) ...
+    wine.attribute.labels(singleAttribute)];
 
 xCluster = [0.55, 2.5, 2.5, 0.55, 0.55];
 yCluster = [0.5, 0.5, 4.5, 4.5, 0.5];
+
+xClusterAdj = [2.55, 4.5, 4.5, 2.55, 2.55];
+yClusterAdj = [0.5, 0.5, 4.5, 4.5, 0.5];
 
 figure(3); 
 % theme(gcf,"light")
@@ -89,6 +99,8 @@ set(gca,'Box', 'off', 'TickDir', 'out',...
     'XTickLabel',organizedLabels)
 hold on
 plot(xCluster, yCluster, 'k-', 'LineWidth', 5);
+plot(xClusterAdj, yClusterAdj, 'k--', 'LineWidth', 2);
+
 hold off
 
 %% CLASSIFYING NEW SAMPLES
@@ -112,7 +124,6 @@ newCanon = (newWine - gmean) * stats.eigenvec;
 hold on
 plot(newCanon(1), newCanon(2), 'kp', 'MarkerSize', 15, 'MarkerFaceColor', 'y')
 hold off
-%%
 
 %% PRINCIPAL COMPONENT ANALYSIS
 pcaWine = zscore(wine.data{:,2:end},[],1);
