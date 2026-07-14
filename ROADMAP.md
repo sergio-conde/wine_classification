@@ -19,7 +19,7 @@ Proyecto de portafolio (data visualization / data insights) usando el dataset UC
 - [x] Ajustar LDA (`fitcdiscr`), con modelo completo (`wineModelFull`) y particionado (`wineModel`, Leaveout) por separado
 - [x] Validar con leave-one-out CV — 98.88% obtenido, reproduce el 98.9% publicado en wine.names
 - [x] Visualizar en espacio LD1 vs LD2 (`manova1` + `gscatter`), coloreado por cultivar
-- [ ] Guardar/usar coeficientes (`wineModelFull.Coeffs`) como insumo para etapa 3
+- [x] Guardar/usar coeficientes (`wineModelFull.Coeffs`) como insumo para etapa 3 — heatmap de pesos estandarizados (crudo × std) por par de clases + promedio absoluto, reorganizado con el cluster fenólico (Flavanoids/Total phenols) destacado con rectángulo sólido y la familia más amplia (OD280/OD315/Proanthocyanins) con rectángulo punteado
 
 ### Rama B: PCA + k-means no supervisado (descubrimiento sistemático de k)
 - [ ] Trabajar en espacio PCA (PC1+PC2 ya validado: separan bien con ~55% de varianza)
@@ -46,3 +46,6 @@ Proyecto de portafolio (data visualization / data insights) usando el dataset UC
 - Se descartó SOM para el método no supervisado: no resuelve mejor el problema de "descubrir k" que k-means + análisis de silueta/codo, y el dataset (178 muestras, bien separable) no justifica sus fortalezas (pensado para datos más grandes/topológicamente complejos).
 - Escalas de color en heatmaps: fijas y explícitas (no auto-escaladas), elegidas deliberadamente según el propósito de cada panel — no simplemente el default de MATLAB.
 - Uso de `AlphaData` en vez de trucos de colormap con NaN, para mayor robustez/portabilidad entre versiones de MATLAB.
+- Coeficientes de LDA comparados entre atributos multiplicando el coeficiente crudo por la std de cada atributo (equivalente a ajustar el modelo sobre datos estandarizados, sin necesidad de mantener un segundo modelo ni de estandarizar muestras nuevas).
+- Al resumir los 3 coeficientes pairwise en una sola medida de "importancia", se usa el promedio del valor absoluto (no el promedio con signo), porque el signo puede variar entre comparaciones para un mismo atributo sin que eso signifique menor influencia.
+- Convención visual para el cluster de atributos: rectángulo sólido = cluster "núcleo duro" (corte formal del dendrograma), rectángulo punteado = familia más amplia y moderadamente correlacionada (estructura anidada de dos niveles).
