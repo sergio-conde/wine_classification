@@ -40,7 +40,7 @@ canonScores = stats.canon;   % proyección: columna 1 = LD1, columna 2 = LD2
 fullAccuracy = 1 - resubLoss(wineModelFull); 
 
 figure(2); % Maps each sample into the LDA space. 
-theme(gcf,"light")
+% theme(gcf,"light")
 
 gscatter(canonScores(:,1), canonScores(:,2), wine.id);
 xlabel('LD1'); ylabel('LD2');
@@ -60,18 +60,36 @@ for ipair = 1:3
     compCoeffs = wineModelFull.Coeffs(classPairs(ipair,1),classPairs(ipair,2)).Linear;
     attributeRank(ipair,:) = compCoeffs.*attributeStd(:);
 end
-attributeRank(4,:) = mean(attributeRank(1:3,:));
+attributeRank(4,:) = mean(abs(attributeRank(1:3,:)));
+
+maxWeight = max(abs(attributeRank),[],'all');
+
+phenolicCluster = {'Flavanoids','Total phenols'};
+clusterAttribute = ismember(wine.attribute.labels,phenolicCluster);
+organizedRank = [attributeRank(:,clusterAttribute) ...
+    attributeRank(:,~clusterAttribute)];
+organizedLabels = [wine.attribute.labels(clusterAttribute) ...
+    wine.attribute.labels(~clusterAttribute)];
+
+xCluster = [0.55, 2.5, 2.5, 0.55, 0.55];
+yCluster = [0.5, 0.5, 4.5, 4.5, 0.5];
 
 figure(3); 
-theme(gcf,"light")
-imagesc(attributeRank)
+% theme(gcf,"light")
+imagesc(organizedRank)
+clim([-maxWeight maxWeight])
+colormap(gca, 'redbluecmap')   % o cualquier colormap divergente que tengas disponible
+
 hbar = colorbar;
 hbar.Label.String = 'Weight';
 set(gca,'Box', 'off', 'TickDir', 'out',...
     'ytick',1:4,...
     'YTickLabel',classPairsLabels,...
     'xtick',1:13,...
-    'XTickLabel',wine.attribute.labels)
+    'XTickLabel',organizedLabels)
+hold on
+plot(xCluster, yCluster, 'k-', 'LineWidth', 5);
+hold off
 
 %% CLASSIFYING NEW SAMPLES
 
@@ -85,7 +103,7 @@ newWineTab = array2table(newWine, "VariableNames", wine.attribute.fieldNames);
 
 predictedNum = double(predictedLabel);
 fprintf('Classification: Cultivar %i with %.2f%% probability\n', ...
-    predictedLabel, score(predictedNum) * 100);
+    predictedNum, score(predictedNum)*100);
 
 % Map the new sample in the LDA space using the eigenvectors
 gmean = mean(wine.data{:,:}, 1);
