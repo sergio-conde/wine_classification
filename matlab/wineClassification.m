@@ -4,7 +4,7 @@
 
 clear; clc
 wine = wineConfig;
-
+nSamples = height(wine.data);
 %% LINEAR DISCRIMINANT ANALYSIS
 
 % This model uses the leave-one-out approach. It runs 178 models leaving
@@ -126,14 +126,15 @@ plot(newCanon(1), newCanon(2), 'kp', 'MarkerSize', 15, 'MarkerFaceColor', 'y')
 hold off
 
 %% PRINCIPAL COMPONENT ANALYSIS
+
 pcaWine = zscore(wine.data{:,2:end},[],1);
 
-[coeff,score,latent,tsquared,explained] = pca(pcaWine);
+[coeff,pcaScore,latent,tsquared,explained] = pca(pcaWine);
 
 wfig(4);
-theme(gcf,"light")
+% theme(gcf,"light")
 subplot 121
-plot(score(:,1),score(:,2),'.k','MarkerSize',5)
+plot(pcaScore(:,1),pcaScore(:,2),'.k','MarkerSize',5)
 grid on
 xlabel 'PCA1'; ylabel 'PCA2'; 
 
@@ -143,3 +144,30 @@ plot(explVariance,'-ok','MarkerFaceColor','auto')
 box off; grid on; ylim([0 100])
 ylabel 'Explained Variance'
 xlabel 'PCA components'
+
+%% USE PCA TO NON SUPERVISED CLUSTERING
+
+kRange = 2:8;
+wcss = nan(1,length(kRange));
+clusterSilho = nan(nSamples,length(kRange));
+
+for kIdx = 1:length(kRange)
+    [idx, C, sumd] = kmeans(pcaScore(:,1:2), kRange(kIdx));
+    wcss(kIdx) = sum(sumd);
+
+    clusterSilho(:,kIdx) = silhouette(pcaScore(:,1:2), idx);
+
+end
+%%
+wfig(5)
+subplot 121
+plot(kRange,wcss,'o-k','MarkerFaceColor','auto')
+box off
+xlabel 'Number of clusters';
+ylabel 'WCSS'
+
+subplot 122
+plot(kRange,mean(clusterSilho),'o-k','MarkerFaceColor','auto')
+box off
+xlabel 'Number of clusters';
+ylabel 'Silhouette'
