@@ -181,7 +181,7 @@ axis tight; hold off; box off
 xlabel 'Number of clusters';
 ylabel 'Silhouette'
 
-%% COMPARE TO THE GROUND TRUE
+%% COMPARE TO THE GROUND TRUTH
 
 cultivarTags = unique(wine.id);
 nCultivar = length(cultivarTags);
