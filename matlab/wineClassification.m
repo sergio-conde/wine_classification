@@ -150,16 +150,22 @@ xlabel 'PCA components'
 kRange = 2:8;
 wcss = nan(1,length(kRange));
 clusterSilho = nan(nSamples,length(kRange));
+clusterId = nan(nSamples,length(kRange));
 
 for kIdx = 1:length(kRange)
-    [idx, C, sumd] = kmeans(pcaScore(:,1:2), kRange(kIdx));
+    [idx, C, sumd] = kmeans(pcaScore(:,1:2), kRange(kIdx), 'Replicates', 10);
+
     wcss(kIdx) = sum(sumd);
-
     clusterSilho(:,kIdx) = silhouette(pcaScore(:,1:2), idx);
-
+    clusterId(:,kIdx) = idx;
 end
+
+meanSilho = mean(clusterSilho);
+[~, optIdx] = max(meanSilho);
+optimalK = kRange(optIdx);
+
 %%
-wfig(5)
+wfig(5); clf
 subplot 121
 plot(kRange,wcss,'o-k','MarkerFaceColor','auto')
 box off
@@ -167,7 +173,37 @@ xlabel 'Number of clusters';
 ylabel 'WCSS'
 
 subplot 122
-plot(kRange,mean(clusterSilho),'o-k','MarkerFaceColor','auto')
-box off
+plot(kRange,meanSilho,'o-k','MarkerFaceColor','auto')
+hold on
+plot([optimalK optimalK],[min(meanSilho) max(meanSilho)],'--r')
+plot(optimalK, max(meanSilho),'or','MarkerFaceColor','r')
+axis tight; hold off; box off
 xlabel 'Number of clusters';
 ylabel 'Silhouette'
+
+%% COMPARE TO THE GROUND TRUE
+
+cultivarTags = unique(wine.id);
+nCultivar = length(cultivarTags);
+clusterCultivar = clusterId(:,optIdx);
+
+fprintf('\nNumber of cultivars: %i; Clustered cultivars: %i\n',...
+    nCultivar,optimalK)
+
+missClass = 0;
+for iCult = 1:nCultivar
+    cultSamples = wine.id == cultivarTags(iCult);
+    clustSamples = clusterCultivar(cultSamples);
+    clustLabel = mode(clustSamples);
+
+    correctPercg = 100 * sum(clustSamples == clustLabel) / sum(cultSamples);
+    fprintf('\nAccuracy cultivar %i: %.2f%%\n',...
+        cultivarTags(iCult),correctPercg)
+
+    missClass = missClass + sum(clustSamples ~= clustLabel);
+end
+genAccuracy = 100 * (nSamples - missClass)/nSamples;
+fprintf('\nGeneral Accuracy: %.2f%%\n',genAccuracy)
+
+
+
