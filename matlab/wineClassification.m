@@ -191,10 +191,14 @@ fprintf('\nNumber of cultivars: %i; Clustered cultivars: %i\n',...
     nCultivar,optimalK)
 
 missClass = 0;
+clustLabels = nan(1,nCultivar);
+
 for iCult = 1:nCultivar
+
     cultSamples = wine.id == cultivarTags(iCult);
     clustSamples = clusterCultivar(cultSamples);
     clustLabel = mode(clustSamples);
+    clustLabels(iCult) = clustLabel;
 
     correctPercg = 100 * sum(clustSamples == clustLabel) / sum(cultSamples);
     fprintf('\nAccuracy cultivar %i: %.2f%%\n',...
@@ -205,5 +209,18 @@ end
 genAccuracy = 100 * (nSamples - missClass)/nSamples;
 fprintf('\nGeneral Accuracy: %.2f%%\n',genAccuracy)
 
+fprintf('\nCluster labels asignados: %s\n', mat2str(clustLabels));
+if length(unique(clustLabels)) < nCultivar
+    warning('Dos o más cultivares comparten el mismo cluster mayoritario')
+end
 
-
+organizedClusters = nan(size(wine.id));
+for iCult = 1:3
+    organizedClusters(clusterCultivar == clustLabels(iCult)) = iCult;
+end
+contingencyTable = crosstab(wine.id, organizedClusters);
+%%
+wfig(6);
+heatmap(contingencyTable)
+xlabel 'PCA + K-means classification'
+ylabel 'Cultivar'
