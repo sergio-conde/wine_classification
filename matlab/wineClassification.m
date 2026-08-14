@@ -154,7 +154,6 @@ clusterId = nan(nSamples,length(kRange));
 
 for kIdx = 1:length(kRange)
     [idx, C, sumd] = kmeans(pcaScore(:,1:2), kRange(kIdx), 'Replicates', 10);
-
     wcss(kIdx) = sum(sumd);
     clusterSilho(:,kIdx) = silhouette(pcaScore(:,1:2), idx);
     clusterId(:,kIdx) = idx;
