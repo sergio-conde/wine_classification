@@ -93,7 +93,7 @@ attClusters = linkage(squareform(dissMatrix),'average');
 mergeHeights = attClusters(:,3);
 gaps = diff(mergeHeights);
 [~, idx] = max(gaps);
-threshold = mean(mergeHeights(idx:idx+1));   % punto medio entre el salto más grande
+threshold = mean(mergeHeights(idx:idx+1));   % midpoint of the largest gap
 
 attClusterLabels = cluster(attClusters, 'Cutoff', threshold, 'Criterion', 'distance');
 

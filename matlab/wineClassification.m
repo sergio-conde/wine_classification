@@ -28,17 +28,20 @@ trueLabels = categorical(wine.id);
 wfig(1)
 confusionchart(trueLabels, predictedLabels);
 
-%%
+%% FULL MODEL AND 2D DISCRIMINANT SPACE
 % This is the full model without any cross-validation.
 wineModelFull = fitcdiscr(wine.data, categorical(wine.id), ...
     "DiscrimType","linear", "Prior","empirical");
 
 % this is important to compare to the LOO case. The full model tends to
 % overestimate the perfromance
-fullAccuracy = 1 - resubLoss(wineModelFull); 
+fullAccuracy = 1 - resubLoss(wineModelFull);
 
+% manova1's canonical variates solve the same generalized eigenproblem as
+% LDA's discriminant axes - used here only to get a single joint 2D
+% projection (LD1/LD2) for all 3 classes, which fitcdiscr doesn't expose.
 [~,~,stats] = manova1(wine.data{:,:}, wine.id);
-canonScores = stats.canon;   % proyección: columna 1 = LD1, columna 2 = LD2
+canonScores = stats.canon;   % projection: column 1 = LD1, column 2 = LD2
 
 wfig(2); % Maps each sample into the LDA space. 
 gscatter(canonScores(:,1), canonScores(:,2), wine.id);
@@ -70,7 +73,9 @@ hold on
 plot(newCanon(1), newCanon(2), 'kp', 'MarkerSize', 15, 'MarkerFaceColor', 'y')
 hold off
 
-%% RANKING COEFFICIENTS 
+%% RANKING COEFFICIENTS
+% Standardized pairwise LDA coefficients, ranking each attribute's
+% contribution to separating each pair of cultivars.
 
 attributeStd = std(wine.data{:,:});
 attributeRank = nan(4,13);
@@ -94,6 +99,8 @@ end
 attributeRank(4,:) = mean(abs(attributeRank(1:3,:)));
 maxWeight = max(abs(attributeRank),[],'all');
 
+% Attribute clusters from the etapa-1 hierarchical clustering, used here
+% just to group correlated attributes together in the plot below.
 phenolicCluster = {'Flavanoids','Total phenols'};
 adjunctCluster = {'OD280/OD315', 'Proanthocyanins'};
 clusterAttribute = ismember(wine.attribute.labels,phenolicCluster);
@@ -117,7 +124,7 @@ yClusterAdj = [0.5, 0.5, 4.5, 4.5, 0.5];
 wfig(3)
 imagesc(organizedRank)
 clim([-maxWeight maxWeight])
-colormap(gca, 'redbluecmap')   % o cualquier colormap divergente que tengas disponible
+colormap(gca, 'redbluecmap')   % or any other diverging colormap you have available
 
 hbar = colorbar;
 hbar.Label.String = 'Weight';
@@ -132,7 +139,9 @@ plot(xClusterAdj, yClusterAdj, 'k--', 'LineWidth', 2);
 hold off
 
 %% PRINCIPAL COMPONENT ANALYSIS
-
+% Unlike LDA, PCA is scale-sensitive (it maximizes raw variance), so
+% attributes are z-scored first to keep any one of them from dominating
+% just because of its units/magnitude.
 pcaWine = zscore(wine.data{:,2:end},[],1);
 
 [~,pcaScore,latent,~,explained] = pca(pcaWine);
@@ -151,7 +160,10 @@ ylabel 'Explained Variance'
 xlabel 'PCA components'
 
 %% USE PCA TO NON SUPERVISED CLUSTERING
-
+% Systematic search for k: WCSS alone can't pick an optimal k (it only
+% measures within-cluster compactness and keeps decreasing as k grows) -
+% the optimal k is taken as the peak of the mean silhouette instead, which
+% also weighs distance to the nearest neighboring cluster.
 kRange = 2:8;
 wcss = nan(1,length(kRange));
 clusterSilho = nan(nSamples,length(kRange));
@@ -208,11 +220,14 @@ end
 genAccuracy = 100 * (nSamples - missClass)/nSamples;
 fprintf('\nGeneral Accuracy: %.2f%%\n',genAccuracy)
 
-fprintf('\nCluster labels asignados: %s\n', mat2str(clustLabels));
+fprintf('\nAssigned cluster labels: %s\n', mat2str(clustLabels));
 if length(unique(clustLabels)) < nCultivar
-    warning('Dos o más cultivares comparten el mismo cluster mayoritario')
+    warning('Two or more cultivars share the same majority cluster')
 end
 
+% k-means cluster IDs are arbitrary (it never sees the cultivar labels),
+% so they're remapped here to their majority-vote cultivar before any
+% further comparison/plotting against the ground truth.
 organizedClusters = nan(size(wine.id));
 for iCult = 1:3
     organizedClusters(clusterCultivar == clustLabels(iCult)) = iCult;
@@ -225,7 +240,10 @@ heatmap(contingencyTable)
 xlabel 'PCA + K-means classification'
 ylabel 'Cultivar'
 
-%%
+%% LDA vs. K-MEANS - SIDE BY SIDE
+% Same k-means cluster assignment shown in both spaces: overlaid on the
+% LDA space (where true class separability is clearest) to see where the
+% two methods disagree, and in its own native PCA space for reference.
 
 wfig(7);
 subplot 131
