@@ -4,10 +4,10 @@
 
 clear; clc
 wine = wineConfig;
+nAtributtes = width(wine.data);
 
 %% DESCRIPTIVE STATISTICS
 
-nAtributtes = width(wine.data);
 descriptParams = {'Mean','STD','Median','IQR','Minimum','Maximum'};
 descriptTable = array2table(nan(nAtributtes,length(descriptParams)),...
     "RowNames", wine.attribute.labels, "VariableNames", descriptParams);
@@ -24,7 +24,7 @@ end
 
 %% ATTRIBUTE'S VALUE HISTOGRAM 
 
-wfig(1);
+wfig(1); clf
 for iAtt = 1:length(wine.attribute.labels)
     subplot(4,4,iAtt)
     histogram(wine.data{:,iAtt},20)
@@ -35,19 +35,23 @@ end
 
 %% ARE THE ATTRIBUTES STATISTICALLY INDEPENDENT?
 
+% explore both Pearson and Spearman since there is no a priori information
+% about the normality of a possible correlations between attributes
 [attributPearson, pPearson] = corr(wine.data{:,:},'Type','Pearson');
 [attributSpearman, pSpearman] = corr(wine.data{:,:},'Type','Spearman');
 
 corrMatrix = triu(attributPearson,1) + tril(attributSpearman,-1);
 corrDiff = abs(attributPearson - attributSpearman);
 
+% corrected by multiple comparisons
 pCorrected = 0.05 / nchoosek(nAtributtes,2);
 
+% set aplha values to highlight significant correlations
 alphaData = ones(nAtributtes);
 alphaData(pPearson > pCorrected | pSpearman > pCorrected) = 0.1;
 alphaData(logical(eye(nAtributtes))) = 0;   
 
-%%
+% Show and compare Pearson and Spearman correlation values
 wfig(2); clf
 
 subplot 121
@@ -62,7 +66,6 @@ clim([-1 1])
 axis square; set(gca,'Color','w');
 box off; xlabel 'Attribute'; ylabel 'Attribute'
 colormap(gca,"parula");
-
 text(9, 5, 'Pearson', ...
     'Rotation', - 45, 'HorizontalAlignment', 'center', ...
     'BackgroundColor', [1 1 1 0.7], 'FontWeight', 'bold')
@@ -81,9 +84,6 @@ clim([0 1])
 axis square; set(gca,'Color','w');
 box off; xlabel 'Attribute'; ylabel 'Attribute'
 colormap(gca,"abyss");
-
-% format figure function
-% white, ticks out
 
 %% Hierarquical clustering 
 
