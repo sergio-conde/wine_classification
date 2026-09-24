@@ -344,3 +344,38 @@ hold off
 box off
 xlabel('LD1'); ylabel('LD2');
 title(['Cultivar 2 average wine — trajectory as ' refAttribute ' varies'])
+
+%% REAL WINE TRAJECTORY - CULTIVAR TRANSITION
+% Etapa 3, question 2 (real-data alternative to the synthetic trajectory
+% above): project the actual samples of the two chosen cultivars onto the
+% axis connecting their centroids in LDA space, then trace them in that
+% order. Every point on this path is an observed wine, not a synthetic
+% construction - expect it to look noisier/less smooth than the
+% synthetic version, since real wines don't move in a perfectly straight
+% line.
+
+cultivarFrom = 2;   % starting cultivar
+cultivarTo = 1;      % target cultivar
+
+centroidFromLD = mean(canonScores(wine.id == cultivarFrom, :), 1);
+centroidToLD = mean(canonScores(wine.id == cultivarTo, :), 1);
+transitionDir = centroidToLD - centroidFromLD;
+transitionDir = transitionDir / norm(transitionDir);
+
+isRelevant = wine.id == cultivarFrom | wine.id == cultivarTo;
+relevantCanon = canonScores(isRelevant, :);
+
+projection = (relevantCanon - centroidFromLD) * transitionDir';
+[~, sortIdx] = sort(projection);
+sortedCanon = relevantCanon(sortIdx, :);
+
+wfig(10)
+gscatter(canonScores(:,1), canonScores(:,2), wine.id);
+hold on
+plot(sortedCanon(:,1), sortedCanon(:,2), 'k.-', 'MarkerSize', 8)
+plot(sortedCanon(1,1), sortedCanon(1,2), 'ks', 'MarkerFaceColor','g', 'MarkerSize',10)
+plot(sortedCanon(end,1), sortedCanon(end,2), 'ks', 'MarkerFaceColor','r', 'MarkerSize',10)
+hold off
+box off
+xlabel('LD1'); ylabel('LD2');
+title(sprintf('Real wines ordered from cultivar %d toward cultivar %d', cultivarFrom, cultivarTo))
