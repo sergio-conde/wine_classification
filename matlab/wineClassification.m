@@ -299,3 +299,40 @@ set(gca, 'YTick', 1:13, 'YTickLabel', sortedLabels, 'YDir', 'reverse', ...
     'Box','off', 'TickDir','out')
 xlabel 'Mean |standardized weight|'
 title 'Attribute importance for cultivar classification'
+
+%% WINE TRAJECTORY - VARYING FLAVANOIDS
+% Etapa 3, question 2: starting from the cultivar-2 average wine (closest
+% pair to cultivar 1, per the earlier Mahalanobis distances), sweep
+% flavonoids across its observed range and trace how the projected sample
+% moves through LDA space.
+%
+% NOTE: this first pass only varies flavonoids, holding every other
+% attribute fixed at the cultivar-2 average - it ignores that flavonoids
+% correlates with total_phenols/od_ratio/proanthocyanins (the phenolic
+% cluster from etapa 1), so some points along the path may not correspond
+% to chemically realistic wines. Worth revisiting once we see the shape.
+
+baseCultivar = 2;
+baseSample = mean(wine.data{wine.id == baseCultivar, :}, 1);
+
+flavIdx = find(strcmp(wine.attribute.fieldNames, 'flavanoids'));
+flavValues = wine.data{:,flavIdx};
+flavRange = linspace(min(flavValues), max(flavValues), 25);
+
+trajectoryCanon = nan(length(flavRange), 2);
+for iStep = 1:length(flavRange)
+    trialSample = baseSample;
+    trialSample(flavIdx) = flavRange(iStep);
+    trajectoryCanon(iStep,:) = (trialSample - gmean) * stats.eigenvec;
+end
+
+wfig(9)
+gscatter(canonScores(:,1), canonScores(:,2), wine.id);
+hold on
+plot(trajectoryCanon(:,1), trajectoryCanon(:,2), 'k.-', 'MarkerSize', 10)
+plot(trajectoryCanon(1,1), trajectoryCanon(1,2), 'ks', 'MarkerFaceColor','g', 'MarkerSize',10)
+plot(trajectoryCanon(end,1), trajectoryCanon(end,2), 'ks', 'MarkerFaceColor','r', 'MarkerSize',10)
+hold off
+box off
+xlabel('LD1'); ylabel('LD2');
+title 'Cultivar 2 average wine — trajectory as flavonoids vary'
