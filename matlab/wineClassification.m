@@ -47,7 +47,9 @@ wfig(2); % Maps each sample into the LDA space.
 gscatter(canonScores(:,1), canonScores(:,2), wine.id);
 box off
 xlabel('LD1'); ylabel('LD2');
-
+hold on
+plot(newCanon(1), newCanon(2), 'kp', 'MarkerSize', 15, 'MarkerFaceColor', 'y')
+hold off
 
 
 %% CLASSIFYING NEW SAMPLES
@@ -69,9 +71,7 @@ fprintf('Classification: Cultivar %i with %.2f%% probability\n', ...
 gmean = mean(wine.data{:,:}, 1);
 newCanon = (newWine - gmean) * stats.eigenvec;
 
-hold on
-plot(newCanon(1), newCanon(2), 'kp', 'MarkerSize', 15, 'MarkerFaceColor', 'y')
-hold off
+
 
 %% RANKING COEFFICIENTS
 % Standardized pairwise LDA coefficients, ranking each attribute's
@@ -285,3 +285,17 @@ maxIndex      = 0.5 * (sumPairsRows + sumPairsCols);
 ARI = (sumPairsCells - expectedIndex) / (maxIndex - expectedIndex);
 fprintf('\nAdjusted Rand Index: %.3f\n', ARI);
 
+%% ATTRIBUTE IMPORTANCE RANKING
+% Etapa 3, question 1: which single attribute matters most for
+% classification overall - rank by the mean |weight| across the 3
+% pairwise comparisons already computed in RANKING COEFFICIENTS.
+
+[sortedWeights, sortIdx] = sort(attributeRank(4,:), 'descend');
+sortedLabels = wine.attribute.labels(sortIdx);
+
+wfig(8)
+barh(sortedWeights)
+set(gca, 'YTick', 1:13, 'YTickLabel', sortedLabels, 'YDir', 'reverse', ...
+    'Box','off', 'TickDir','out')
+xlabel 'Mean |standardized weight|'
+title 'Attribute importance for cultivar classification'
