@@ -300,35 +300,35 @@ set(gca, 'YTick', 1:13, 'YTickLabel', sortedLabels, 'YDir', 'reverse', ...
 xlabel 'Mean |standardized weight|'
 title 'Attribute importance for cultivar classification'
 
-%% WINE TRAJECTORY - VARYING FLAVANOIDS
+%% WINE TRAJECTORY - VARYING A PHENOLIC-CLUSTER ATTRIBUTE
 % Etapa 3, question 2: starting from the cultivar-2 average wine (closest
 % pair to cultivar 1, per the earlier Mahalanobis distances), sweep
-% flavonoids across its observed range and trace how the projected sample
-% moves through LDA space. The other phenolic-cluster attributes
-% (total_phenols, od_ratio, proanthocyanins) are updated at each step via
-% predictPhenolicCluster, instead of being held fixed, so the trajectory
-% respects how these compounds actually co-vary in real wines.
+% refAttribute across its observed range and trace how the projected
+% sample moves through LDA space. The other phenolic-cluster attributes
+% are updated at each step via predictPhenolicCluster, instead of being
+% held fixed, so the trajectory respects how these compounds actually
+% co-vary in real wines.
+
+refAttribute = 'flavanoids';   % one of: 'phenols','flavanoids','odRatio','proanthocyanins'
 
 baseCultivar = 2;
 baseSample = mean(wine.data{wine.id == baseCultivar, :}, 1);
 
-flavIdx = find(strcmp(wine.attribute.fieldNames, 'flavanoids'));
-phenolsIdx = find(strcmp(wine.attribute.fieldNames, 'phenols'));
-odRatioIdx = find(strcmp(wine.attribute.fieldNames, 'odRatio'));
-proanthocyaninsIdx = find(strcmp(wine.attribute.fieldNames, 'proanthocyanins'));
+refIdx = find(strcmp(wine.attribute.fieldNames, refAttribute));
+refValues = wine.data{:,refIdx};
+refRange = linspace(min(refValues), max(refValues), 25);
 
-flavValues = wine.data{:,flavIdx};
-flavRange = linspace(min(flavValues), max(flavValues), 25);
-
-trajectoryCanon = nan(length(flavRange), 2);
-for iStep = 1:length(flavRange)
+trajectoryCanon = nan(length(refRange), 2);
+for iStep = 1:length(refRange)
     trialSample = baseSample;
-    trialSample(flavIdx) = flavRange(iStep);
+    trialSample(refIdx) = refRange(iStep);
 
-    predicted = predictPhenolicCluster(wine.data, 'flavanoids', flavRange(iStep));
-    trialSample(phenolsIdx) = predicted.phenols;
-    trialSample(odRatioIdx) = predicted.odRatio;
-    trialSample(proanthocyaninsIdx) = predicted.proanthocyanins;
+    predicted = predictPhenolicCluster(wine.data, refAttribute, refRange(iStep));
+    otherFields = fieldnames(predicted);
+    for iField = 1:length(otherFields)
+        fieldIdx = find(strcmp(wine.attribute.fieldNames, otherFields{iField}));
+        trialSample(fieldIdx) = predicted.(otherFields{iField});
+    end
 
     fullProjection = (trialSample - gmean) * stats.eigenvec;
     trajectoryCanon(iStep,:) = fullProjection(1:2);
@@ -343,4 +343,4 @@ plot(trajectoryCanon(end,1), trajectoryCanon(end,2), 'ks', 'MarkerFaceColor','r'
 hold off
 box off
 xlabel('LD1'); ylabel('LD2');
-title 'Cultivar 2 average wine — trajectory as flavonoids vary'
+title(['Cultivar 2 average wine — trajectory as ' refAttribute ' varies'])
