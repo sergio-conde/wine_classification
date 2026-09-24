@@ -47,9 +47,6 @@ wfig(2); % Maps each sample into the LDA space.
 gscatter(canonScores(:,1), canonScores(:,2), wine.id);
 box off
 xlabel('LD1'); ylabel('LD2');
-hold on
-plot(newCanon(1), newCanon(2), 'kp', 'MarkerSize', 15, 'MarkerFaceColor', 'y')
-hold off
 
 
 %% CLASSIFYING NEW SAMPLES
@@ -71,6 +68,9 @@ fprintf('Classification: Cultivar %i with %.2f%% probability\n', ...
 gmean = mean(wine.data{:,:}, 1);
 newCanon = (newWine - gmean) * stats.eigenvec;
 
+hold on
+plot(newCanon(1), newCanon(2), 'kp', 'MarkerSize', 15, 'MarkerFaceColor', 'y')
+hold off
 
 
 %% RANKING COEFFICIENTS
@@ -304,18 +304,19 @@ title 'Attribute importance for cultivar classification'
 % Etapa 3, question 2: starting from the cultivar-2 average wine (closest
 % pair to cultivar 1, per the earlier Mahalanobis distances), sweep
 % flavonoids across its observed range and trace how the projected sample
-% moves through LDA space.
-%
-% NOTE: this first pass only varies flavonoids, holding every other
-% attribute fixed at the cultivar-2 average - it ignores that flavonoids
-% correlates with total_phenols/od_ratio/proanthocyanins (the phenolic
-% cluster from etapa 1), so some points along the path may not correspond
-% to chemically realistic wines. Worth revisiting once we see the shape.
+% moves through LDA space. The other phenolic-cluster attributes
+% (total_phenols, od_ratio, proanthocyanins) are updated at each step via
+% predictPhenolicCluster, instead of being held fixed, so the trajectory
+% respects how these compounds actually co-vary in real wines.
 
 baseCultivar = 2;
 baseSample = mean(wine.data{wine.id == baseCultivar, :}, 1);
 
 flavIdx = find(strcmp(wine.attribute.fieldNames, 'flavanoids'));
+phenolsIdx = find(strcmp(wine.attribute.fieldNames, 'phenols'));
+odRatioIdx = find(strcmp(wine.attribute.fieldNames, 'odRatio'));
+proanthocyaninsIdx = find(strcmp(wine.attribute.fieldNames, 'proanthocyanins'));
+
 flavValues = wine.data{:,flavIdx};
 flavRange = linspace(min(flavValues), max(flavValues), 25);
 
@@ -323,7 +324,14 @@ trajectoryCanon = nan(length(flavRange), 2);
 for iStep = 1:length(flavRange)
     trialSample = baseSample;
     trialSample(flavIdx) = flavRange(iStep);
-    trajectoryCanon(iStep,:) = (trialSample - gmean) * stats.eigenvec;
+
+    predicted = predictPhenolicCluster(wine.data, 'flavanoids', flavRange(iStep));
+    trialSample(phenolsIdx) = predicted.phenols;
+    trialSample(odRatioIdx) = predicted.odRatio;
+    trialSample(proanthocyaninsIdx) = predicted.proanthocyanins;
+
+    fullProjection = (trialSample - gmean) * stats.eigenvec;
+    trajectoryCanon(iStep,:) = fullProjection(1:2);
 end
 
 wfig(9)
