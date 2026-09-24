@@ -264,3 +264,24 @@ box off
 xlabel('PC1'); ylabel('PC2');
 title 'K-means clusters — PCA space (native)'
 
+%% ADJUSTED RAND INDEX
+% Formal, permutation-free agreement score between the k-means clustering
+% and the true cultivars - unlike the majority-vote accuracy above, it
+% doesn't rely on picking a single cluster-to-cultivar mapping.
+
+pairCount = @(x) x.*(x-1)/2;   % number of same-group pairs in a group of size x
+
+rowSums = sum(contingencyTable,2);   % samples per cultivar
+colSums = sum(contingencyTable,1);   % samples per assigned cluster
+
+sumPairsCells = sum(pairCount(contingencyTable(:)));
+sumPairsRows  = sum(pairCount(rowSums));
+sumPairsCols  = sum(pairCount(colSums));
+totalPairs    = pairCount(nSamples);
+
+expectedIndex = (sumPairsRows * sumPairsCols) / totalPairs;
+maxIndex      = 0.5 * (sumPairsRows + sumPairsCols);
+
+ARI = (sumPairsCells - expectedIndex) / (maxIndex - expectedIndex);
+fprintf('\nAdjusted Rand Index: %.3f\n', ARI);
+
