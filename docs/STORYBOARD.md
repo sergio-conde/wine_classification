@@ -51,7 +51,7 @@ Eight beats, built backwards from the widget: each one teaches the reader someth
 - LDA on all 13 standardized attributes, shown as an LD1–LD2 map with coloured decision regions. This is the same canvas the widget uses.
 - One number: **98.88% leave-one-out accuracy** (2 of 178 wines misclassified), next to the 98.9% originally published for this dataset.
 - k-means as one sentence of validation: without labels it still finds k = 3 and agrees with the cultivars 88% of the time. The territories are real, not imposed by the labels.
-- Mahalanobis distances between cultivar means: 1–2 = 5.34 (closest), 2–3 = 5.98, 1–3 = 7.75. This sets up chapter 3: turning a 2 into a 1 should be the cheapest crossing. *(Check the pair labels against the code.)*
+- Mahalanobis distances between cultivar means: 1–2 = 5.34 (closest), 2–3 = 5.98, 1–3 = 7.75. This sets up chapter 3: turning a 2 into a 1 should be the cheapest crossing.
 
 **Technical note worth one line on the page:** with three classes LDA has exactly two discriminants, so the LD1–LD2 map holds everything the classifier uses. It is the model, not a lossy projection of it.
 
@@ -175,7 +175,7 @@ Chapter 3 gets built first in code: the climax decides what chapters 1 and 2 hav
 **Open decisions**
 
 - [x] Cultivar names: 1 = Barolo (Nebbiolo grape), 2 = Grignolino, 3 = Barbera. Inferred from the class counts (59 / 71 / 48) and row order of Forina et al. (1986), of which the UCI data is a 13-variable subset, and consistent with the chemistry. A final check against a citable source is still pending (Sergio).
-- [ ] Guided pair: keep 2 → 1 once the 3a check is done.
+- [x] Guided pair: 2 → 1. The 3a check confirmed the hypothesis: along the whole observed range of the phenolic dial, P(1) never rises above 0.000 for the median cultivar-2 wine.
 - [x] Correlation shown in chapter 1: Pearson. Spearman gives the same picture (it differs by at most 0.08 within the phenolic block). The copy should say the block moves together *across* the 178 wines: within each cultivar it is much weaker.
 - [x] Starting wine: the class median, so the result speaks for the typical wine rather than for whichever wines the dataset happens to hold. The real wine closest to the median is kept as a robustness check. The same rule applies to all three cultivars in the widget.
 - [ ] "Crossed the border" threshold: P ≥ 0.5 or P ≥ 0.9.
