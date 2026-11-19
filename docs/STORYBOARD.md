@@ -174,9 +174,10 @@ Chapter 3 gets built first in code: the climax decides what chapters 1 and 2 hav
 
 **Open decisions**
 
-- [ ] Cultivar names: confirm whether Barolo / Grignolino / Barbera holds up against a citable source (Sergio checking).
+- [x] Cultivar names: 1 = Barolo (Nebbiolo grape), 2 = Grignolino, 3 = Barbera. Inferred from the class counts (59 / 71 / 48) and row order of Forina et al. (1986), of which the UCI data is a 13-variable subset, and consistent with the chemistry. A final check against a citable source is still pending (Sergio).
 - [ ] Guided pair: keep 2 → 1 once the 3a check is done.
-- [ ] Correlation shown in chapter 1: Pearson or Spearman.
+- [x] Correlation shown in chapter 1: Pearson. Spearman gives the same picture (it differs by at most 0.08 within the phenolic block). The copy should say the block moves together *across* the 178 wines: within each cultivar it is much weaker.
+- [x] Starting wine: the class median, so the result speaks for the typical wine rather than for whichever wines the dataset happens to hold. The real wine closest to the median is kept as a robustness check. The same rule applies to all three cultivars in the widget.
 - [ ] "Crossed the border" threshold: P ≥ 0.5 or P ≥ 0.9.
 - [ ] Final slider set, after the L1 recipes.
 
